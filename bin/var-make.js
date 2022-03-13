@@ -2,6 +2,7 @@
 const program = require(`commander`);
 const fs = require(`fs`);
 const path = require(`path`);
+const { jsx } = require(`var-jsx`);
 const { tempParser, makeHtml } = require(`./tempParser`);
 
 const myPath = process.cwd();
@@ -19,7 +20,7 @@ const make_new = (fileName) => {
     fs.writeFileSync(path.join(nowPath, `html`, `body.html`), `<body>\n    <say helloWorld></say>\n</body>`);
 
     fs.mkdirSync(path.join(nowPath, `templates`));
-    fs.writeFileSync(path.join(nowPath, `templates`, `say.template`), `<var say tex>\n    <hi><-tex-></hi>\n</var>`);
+    fs.writeFileSync(path.join(nowPath, `templates`, `say.template`), `<template target="say">\n    <state>tex</state>\n    <render>\n        <hi><-tex-></hi>\n    </render>\n</template>`);
 
     fs.mkdirSync(path.join(nowPath, `javascript`));
     fs.writeFileSync(path.join(nowPath, `javascript`, `setting.json`), `{\n    "load_priority" : [\n        "main"\n    ]\n}`);
@@ -41,21 +42,21 @@ const build_new = (fileName) => {
     let myScripts = [];
 
     fs.mkdirSync(path.join(nowPath, `javascript`));
+
+    const info = fs.readFileSync(path.join(infoPath, `javascript`, `setting.json`), `utf-8`);
+    const prio = JSON.parse(info).load_priority;
+
+    prio.map(element => {
+        myScripts.push(element.replace(`.js`, ``));
+    });
+
     fs.readdirSync(path.join(infoPath, "javascript")).map((name) => {
-        if (name === `setting.json`) {
-            const info = fs.readFileSync(path.join(infoPath, `javascript`, name), `utf-8`);
-            const prio = JSON.parse(info).load_priority;
-
-            prio.map(element => {
-                myScripts.push(element);
-            });
-        }
-        else {
+        if (name !== `setting.json`) {
             const data = fs.readFileSync(path.join(infoPath, `javascript`, name), `utf-8`);
-            fs.writeFileSync(path.join(nowPath, `javascript`, name), data);
+            fs.writeFileSync(path.join(nowPath, `javascript`, name), jsx.translate(data));
 
-            if (!myScripts.includes(name))
-                myScripts.push(name);
+            if (!myScripts.includes(name.replace(`.js`, ``)))
+                myScripts.push(name.replace(`.js`, ``));
         }
     });
 
@@ -75,15 +76,17 @@ const build_new = (fileName) => {
         fs.writeFileSync(path.join(nowPath, `image`, name), data);
     });
 
+    const myTemp = [];
     fs.readdirSync(path.join(infoPath, "templates")).map((name) => {
         const data = tempParser(fs.readFileSync(path.join(infoPath, `templates`, name), `utf-8`));
-        fs.writeFileSync(path.join(nowPath, `templates.json`), data);
+        myTemp.push(data);
     });
+    fs.writeFileSync(path.join(nowPath, `javascript`, `templates.js`), `const templates = ${JSON.stringify(myTemp)}`);
 
     const head = fs.readFileSync(path.join(infoPath, `html`, `head.html`), `utf-8`);
     const body = fs.readFileSync(path.join(infoPath, `html`, `body.html`), `utf-8`);
 
-    fs.writeFileSync(path.join(nowPath, `index.html`), makeHtml(head, body, myScripts, myCss));
+    fs.writeFileSync(path.join(nowPath, `index.html`), makeHtml(head, body, [...myScripts, `templates`], myCss));
 };
 
 program

@@ -1,4 +1,5 @@
 const { parse } = require(`node-html-parser`);
+const { jsx } = require(`var-jsx`);
 
 const tempParser = (str) => {
     const html = parse(str);
@@ -10,13 +11,14 @@ const tempParser = (str) => {
         myTemp.name = element.getAttribute(`target`) ? element.getAttribute(`target`) : "";
         myTemp.state = element.childNodes.find(child => child.rawTagName === `state`) ? element.childNodes.find(child => child.rawTagName === `state`).innerHTML.replace(/ /g, ``).split(`,`) : [];
         myTemp.variables = element.getAttribute(`variable`) ? element.getAttribute(`variable`).replace(/ /g, ``).split(`,`) : "";
-        myTemp.firFunc = element.childNodes.find(child => child.rawTagName === `start`) ? element.childNodes.find(child => child.rawTagName === `start`).innerHTML : "";
-        myTemp.upFunc = element.childNodes.find(child => child.rawTagName === `update`) ? element.childNodes.find(child => child.rawTagName === `update`).innerHTML : "";
+        myTemp.firFunc = element.childNodes.find(child => child.rawTagName === `start`) ? jsx.translate(element.childNodes.find(child => child.rawTagName === `start`).innerHTML) : "";
+        myTemp.upFunc = element.childNodes.find(child => child.rawTagName === `update`) ? jsx.translate(element.childNodes.find(child => child.rawTagName === `update`).innerHTML) : "";
+        myTemp.render = jsx.translate(element.childNodes.find(child => child.rawTagName === `render`).innerHTML);
 
         templates.push(myTemp);
     });
 
-    return JSON.stringify({ "templates": templates });
+    return templates;
 };
 
 const makeHtml = (head, body, myScripts, myCss) => {
