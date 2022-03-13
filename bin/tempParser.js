@@ -1,6 +1,10 @@
 const { parse } = require(`node-html-parser`);
 const { jsx } = require(`var-jsx`);
 
+const makeVar_save = (str, variables, states) => {
+    return `({${variables.join(`,`)}},{${states.join(`,`)}}) => {\n${str}\nreturn {${variables.map(element => `"${element}":${element}`).join(`,`)}}\n}`;
+}
+
 const tempParser = (str) => {
     const html = parse(str);
     const temphtmls = html.childNodes.filter(element => element.rawTagName === `template`);
@@ -10,12 +14,12 @@ const tempParser = (str) => {
         let myTemp = {};
         myTemp.name = element.getAttribute(`target`) ? element.getAttribute(`target`) : "";
         myTemp.state = element.childNodes.find(child => child.rawTagName === `state`) ? element.childNodes.find(child => child.rawTagName === `state`).innerHTML.replace(/ /g, ``).split(`,`) : [];
-        myTemp.variables = element.getAttribute(`variable`) ? element.getAttribute(`variable`).replace(/ /g, ``).split(`,`) : "";
-        myTemp.firFunc = element.childNodes.find(child => child.rawTagName === `start`) ? jsx.translate(element.childNodes.find(child => child.rawTagName === `start`).innerHTML) : "";
-        myTemp.upFunc = element.childNodes.find(child => child.rawTagName === `update`) ? jsx.translate(element.childNodes.find(child => child.rawTagName === `update`).innerHTML) : "";
-        myTemp.render = jsx.translate(element.childNodes.find(child => child.rawTagName === `render`).innerHTML);
+        myTemp.variables = element.getAttribute(`variable`) ? element.getAttribute(`variable`).replace(/ /g, ``).split(`,`) : [];
+        myTemp.firFunc = element.childNodes.find(child => child.rawTagName === `start`) ? makeVar_save(jsx.translate(element.childNodes.find(child => child.rawTagName === `start`).innerHTML), myTemp.variables, myTemp.state) : "null";
+        myTemp.upFunc = element.childNodes.find(child => child.rawTagName === `update`) ? makeVar_save(jsx.translate(element.childNodes.find(child => child.rawTagName === `update`).innerHTML), myTemp.variables, myTemp.state) : "null";
+        myTemp.render = makeVar_save(jsx.translate(element.childNodes.find(child => child.rawTagName === `render`).innerHTML), myTemp.variables, myTemp.state);
 
-        templates.push(myTemp);
+        templates.push(`{\nname:"${myTemp.name}",\nstate:[${myTemp.state.map(element => `"${element}"`).join(',')}],\nvariables:[${myTemp.variables.map(element => `"${element}"`).join(',')}],\nfirFunc:${myTemp.firFunc},\nupFunc:${myTemp.upFunc},\nrender:${myTemp.render}\n}`);
     });
 
     return templates;

@@ -81,7 +81,7 @@ const build_new = (fileName) => {
         const data = tempParser(fs.readFileSync(path.join(infoPath, `templates`, name), `utf-8`));
         myTemp.push(data);
     });
-    fs.writeFileSync(path.join(nowPath, `javascript`, `templates.js`), `const templates = ${JSON.stringify(myTemp)}`);
+    fs.writeFileSync(path.join(nowPath, `javascript`, `templates.js`), `const templates = [\n${myTemp.join(`,\n`)}\n]`);
 
     const head = fs.readFileSync(path.join(infoPath, `html`, `head.html`), `utf-8`);
     const body = fs.readFileSync(path.join(infoPath, `html`, `body.html`), `utf-8`);
