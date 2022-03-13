@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const program = require(`commander`);
+const request = require('request');
 const fs = require(`fs`);
 const path = require(`path`);
 const { jsx } = require(`var-jsx`);
@@ -16,8 +17,8 @@ const make_new = (fileName) => {
     fs.mkdirSync(nowPath);
 
     fs.mkdirSync(path.join(nowPath, `html`));
-    fs.writeFileSync(path.join(nowPath, `html`, `head.html`), `<head>\n    <meta charset="UTF-8">\n    <language>en</language>\n    <title>Var App</title>\n</head>`);
-    fs.writeFileSync(path.join(nowPath, `html`, `body.html`), `<body>\n    <say helloWorld></say>\n</body>`);
+    fs.writeFileSync(path.join(nowPath, `html`, `head.html`), `<head>\n    <meta charset="UTF-8">\n    <title>Var App</title>\n</head>`);
+    fs.writeFileSync(path.join(nowPath, `html`, `body.html`), `<body>\n    <say tex="helloWorld"></say>\n</body>`);
 
     fs.mkdirSync(path.join(nowPath, `templates`));
     fs.writeFileSync(path.join(nowPath, `templates`, `say.template`), `<template target="say">\n    <state>tex</state>\n    <render>\n        <hi><-tex-></hi>\n    </render>\n</template>`);
@@ -81,12 +82,15 @@ const build_new = (fileName) => {
         const data = tempParser(fs.readFileSync(path.join(infoPath, `templates`, name), `utf-8`));
         myTemp.push(data);
     });
-    fs.writeFileSync(path.join(nowPath, `javascript`, `templates.js`), `const templates = [\n${myTemp.join(`,\n`)}\n]`);
+    fs.writeFileSync(path.join(nowPath, `javascript`, `templates.js`), `'self';\n'unsafe-eval';\nconst templates = [\n${myTemp.join(`,\n`)}\n]`);
+    request(`https://cdn.jsdelivr.net/gh/exte0427/var/v2/parser-v3.js`, (error, res, b) => {
+        fs.writeFileSync(path.join(nowPath, `javascript`, `var.js`), b);
 
-    const head = fs.readFileSync(path.join(infoPath, `html`, `head.html`), `utf-8`);
-    const body = fs.readFileSync(path.join(infoPath, `html`, `body.html`), `utf-8`);
+        const head = fs.readFileSync(path.join(infoPath, `html`, `head.html`), `utf-8`);
+        const body = fs.readFileSync(path.join(infoPath, `html`, `body.html`), `utf-8`);
 
-    fs.writeFileSync(path.join(nowPath, `index.html`), makeHtml(head, body, [...myScripts, `templates`], myCss));
+        fs.writeFileSync(path.join(nowPath, `index.html`), makeHtml(head, body, [...myScripts, `templates`], myCss));
+    });
 };
 
 program
