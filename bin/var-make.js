@@ -3,6 +3,7 @@ const program = require(`commander`);
 const request = require('request');
 const fs = require(`fs`);
 const path = require(`path`);
+const { var_main } = require(`var-main`);
 const { jsx } = require(`var-jsx`);
 const { tempParser, makeHtml } = require(`./tempParser`);
 
@@ -83,14 +84,12 @@ const build_new = (fileName) => {
         myTemp.push(data);
     });
     fs.writeFileSync(path.join(nowPath, `javascript`, `templates.js`), `'self';\n'unsafe-eval';\nconst templates = [\n${myTemp.join(`,\n`)}\n]`);
-    request(`https://cdn.jsdelivr.net/gh/exte0427/var/v2/parser-v3.js`, (error, res, b) => {
-        fs.writeFileSync(path.join(nowPath, `javascript`, `var.js`), b);
+    fs.writeFileSync(path.join(nowPath, `javascript`, `var.js`), var_main.getCode());
 
-        const head = fs.readFileSync(path.join(infoPath, `html`, `head.html`), `utf-8`);
-        const body = fs.readFileSync(path.join(infoPath, `html`, `body.html`), `utf-8`);
+    const head = fs.readFileSync(path.join(infoPath, `html`, `head.html`), `utf-8`);
+    const body = fs.readFileSync(path.join(infoPath, `html`, `body.html`), `utf-8`);
 
-        fs.writeFileSync(path.join(nowPath, `index.html`), makeHtml(head, body, [...myScripts, `templates`], myCss));
-    });
+    fs.writeFileSync(path.join(nowPath, `index.html`), makeHtml(head, body, [...myScripts, `templates`], myCss));
 };
 
 program

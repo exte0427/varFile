@@ -1,12 +1,16 @@
 const { parse } = require(`node-html-parser`);
 const { jsx } = require(`var-jsx`);
 
+const makeVar_code = (str) => {
+    return str.replaceAll(`"`, `\\"`);
+}
+
 const makeVar_save = (str, variables, states) => {
-    return `({${variables.join(`,`)}},{${states.join(`,`)}}) => {\n${str}\nreturn {${variables.map(element => `"${element}":${element}`).join(`,`)}}\n}`;
+    return `({${variables.join(`,`)}},{${states.join(`,`)}}) => {\n${makeVar_code(str)}\nreturn {${variables.map(element => `"${element}":${element}`).join(`,`)}}\n}`;
 }
 
 const makeRender = (str, variables, states) => {
-    return `({${variables.join(`,`)}},{${states.join(`,`)}}) => ${str}`;
+    return `({${variables.join(`,`)}},{${states.join(`,`)}}) => ${makeVar_code(str)}`;
 }
 
 const tempParser = (str) => {
