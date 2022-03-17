@@ -18,7 +18,7 @@
     "node-html-parser": "^5.3.2",
     "path": "^0.12.7",
     "request": "^2.88.2",
-    "var-jsx": "^1.1.0",
-    "var-main": "^1.0.9"
+    "var-jsx": "^1.1.1",
+    "var-main": "^1.1.0"
   }
 }
